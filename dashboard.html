@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แดชบอร์ด · LeaveEasy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/util.js" defer></script>
+  <script src="js/nav.js" defer></script>
+  <script type="module" src="js/auth-guard.js"></script>
+</head>
+<body>
+  <div id="nav"></div>
+
+  <div class="container">
+    <h1>แดชบอร์ดสรุป</h1>
+    <p class="subtitle">หน้านี้เป็นโครงจาก prototype — ต่อตัวเลขจริงจากฐานข้อมูลเป็นเนื้อหา Module 3</p>
+
+    <div class="stat-row">
+      <a class="stat" href="leave-requests.html?status=รอพิจารณา">
+        <div class="number">3</div>
+        <div>รอพิจารณา</div>
+      </a>
+      <a class="stat" href="leave-requests.html?status=อนุมัติ">
+        <div class="number">1</div>
+        <div>อนุมัติ</div>
+      </a>
+      <a class="stat" href="leave-requests.html?status=ไม่อนุมัติ">
+        <div class="number">1</div>
+        <div>ไม่อนุมัติ</div>
+      </a>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h2>ใบลาล่าสุด 5 รายการ</h2>
+      <table>
+        <thead>
+          <tr><th>หัวข้อ</th><th>ประเภทการลา</th><th>สถานะ</th><th class="hide-mobile">ผู้ขอลา</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ลาพักร้อนช่วงวันหยุดยาว</td>
+            <td>ลาพักร้อน</td>
+            <td><span class="badge badge-ไม่อนุมัติ">ไม่อนุมัติ</span></td>
+            <td class="hide-mobile">สมศรี ตั้งใจ</td>
+          </tr>
+          <tr>
+            <td>ลาป่วยไปพบแพทย์ตามนัด</td>
+            <td>ลาป่วย</td>
+            <td><span class="badge badge-รอพิจารณา">รอพิจารณา</span></td>
+            <td class="hide-mobile">สมชาย ใจดี</td>
+          </tr>
+          <tr>
+            <td>ลากิจไปทำบัตรประชาชน</td>
+            <td>ลากิจ</td>
+            <td><span class="badge badge-รอพิจารณา">รอพิจารณา</span></td>
+            <td class="hide-mobile">สมศรี ตั้งใจ</td>
+          </tr>
+          <tr>
+            <td>ลาพักร้อนไปเที่ยวกับครอบครัว</td>
+            <td>ลาพักร้อน</td>
+            <td><span class="badge badge-รอพิจารณา">รอพิจารณา</span></td>
+            <td class="hide-mobile">สมชาย ใจดี</td>
+          </tr>
+          <tr>
+            <td>ลาป่วยไข้หวัดใหญ่</td>
+            <td>ลาป่วย</td>
+            <td><span class="badge badge-อนุมัติ">อนุมัติ</span></td>
+            <td class="hide-mobile">สมชาย ใจดี</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn btn-ghost" href="leave-requests.html">ดูรายการใบลาทั้งหมด</a>
+    </div>
+  </div>
+</body>
+</html>

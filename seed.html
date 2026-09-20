@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeaveEasy ทำเมล็ด Firestore</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/nav.js" defer></script>
+</head>
+<body>
+  <div id="nav"></div>
+
+  <script src="js/data.js" defer></script>
+
+  <div class="container">
+    <h1>ทำเมล็ด Firestore</h1>
+    <p class="subtitle">คลิกปุ่มด้านล่างเพื่อใส่ข้อมูลตัวอย่าง 5 รายการลง Firestore</p>
+
+    <div class="card">
+      <h2>ข้อมูลที่จะใส่</h2>
+      <ul>
+        <li>ผู้ใช้ 3 คน (u001, u002, u003)</li>
+        <li>ประเภทการลา 3 แบบ (lt001, lt002, lt003)</li>
+        <li>ใบขอลา 5 ใบ (lr001-lr005)</li>
+        <li>ความเห็นการอนุมัติ 4 รายการ (ap001-ap004)</li>
+      </ul>
+      <p class="hint">⚠️ การคลิกปุ่มจะ <strong>เขียนทับข้อมูลเดิม</strong> ถ้ามีอยู่ — คลิกซ้ำก็ได้</p>
+    </div>
+
+    <div class="card">
+      <button id="seedBtn" class="btn" disabled>
+        <span id="seedBtnText">กำลังเชื่อมต่อ Firebase...</span>
+      </button>
+      <p id="seedStatus" class="hint"></p>
+    </div>
+  </div>
+
+  <script type="module" src="js/seed.js"></script>
+</body>
+</html>

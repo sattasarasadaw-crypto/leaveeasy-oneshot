@@ -1,9 +1,17 @@
-# 🔧 LeaveEasy — จุดเริ่มต้นของใบงาน
+# 🔧 LeaveEasy — One-Shot Build (สัปดาห์ที่ 9)
 
-**ADT-RAISE Non-Degree Batch 2 · Module 2: MVP-Ready** (สัปดาห์ที่ 6–9)
+**🔴 Live App:** https://leaveeasy-oneshot-sat.web.app
+**🧪 ผลทดสอบอัตโนมัติ (5/5 PASS):** [`test-results.md`](test-results.md) · รายการที่ยังไม่แก้: [`BACKLOG.md`](BACKLOG.md)
 
-นี่คือ **เว็บ prototype ของระบบขอลาออนไลน์** ที่ทุกคนจะใช้เป็นจุดเริ่มต้นในคาบ Workshop บ่ายวันเสาร์
-เขียนด้วย **HTML · CSS · JavaScript ธรรมดา** ไม่มี framework ไม่มีขั้นตอน build
+**ADT-RAISE Non-Degree Batch 2 · Module 2** — repo นี้คือ **"leaveeasy-oneshot"** งานสัปดาห์ที่ 9
+(สร้างระบบทั้งหมดจาก `leaveeasy-spec.md` ในคำสั่งเดียว โดยทีม AI agent 3 โมเดลต่างกัน แล้วทดสอบด้วย Playwright)
+เขียนด้วย **HTML · CSS · JavaScript ธรรมดา** ไม่มี framework ไม่มีขั้นตอน build · ฐานข้อมูล/ล็อกอิน/สิทธิ์การเข้าถึงจริงผ่าน Firebase (Firestore + Authentication + Security Rules)
+
+ทีม AI ที่ใช้สร้างระบบนี้ (`.claude/agents/`):
+- `schema-seed-builder` (Haiku) — Firebase config, seed data
+- `feature-builder` (Sonnet) — ทุกหน้า, CRUD, auth, ปุ่ม AI จัดประเภทการลา
+- `security-reviewer` (Opus) — Firestore Security Rules + ตรวจสอบเทียบ spec
+- `tester` (Sonnet) — เขียน/รัน Playwright test 5 ตัว + `test-results.md`
 
 ---
 
@@ -48,12 +56,11 @@ leaveeasy-spec.md             📄 ข้อกำหนดของระบบ
 
 ---
 
-## ⚠️ ตอนนี้ระบบยังไม่มีความจำ
+## ✅ ระบบต่อฐานข้อมูลจริงแล้ว
 
-ลองเปิด **ยื่นใบลาใหม่** → กรอกอะไรก็ได้ → กดบันทึก → **กด F5 รีเฟรช**
-ข้อมูลที่เพิ่งกรอกจะหายหมด เพราะข้อมูลทั้งหมดยังเป็นของปลอมที่พิมพ์ค้างไว้ใน `js/data.js`
-
-**นั่นคือสิ่งที่คุณจะแก้ในสัปดาห์ที่ 6** — ต่อระบบเข้ากับคลังเก็บข้อมูลจริง
+ยื่นใบลาใหม่ → กดบันทึก → กด F5 รีเฟรช → ข้อมูลยังอยู่ (Firestore จริง ไม่ใช่ข้อมูลปลอมใน `js/data.js` อีกต่อไป)
+ล็อกอิน/สมัครสมาชิกจริงผ่าน Firebase Authentication · สิทธิ์การเข้าถึงบังคับจริงฝั่งเซิร์ฟเวอร์ด้วย Firestore Security Rules
+(ดูรายละเอียดการทดสอบใน [`test-results.md`](test-results.md))
 
 ---
 

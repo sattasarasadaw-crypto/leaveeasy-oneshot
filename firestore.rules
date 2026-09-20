@@ -1,0 +1,152 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────
+// firestore.rules — กฎเฝ้าข้อมูลรายห้อง (สัปดาห์ที่ 8)
+// บังคับตาราง ACL หัวข้อ 2 และกฎการเปลี่ยนสถานะหัวข้อ 6 ของ leaveeasy-spec.md
+// ฝั่งเซิร์ฟเวอร์ ไม่ใช่แค่ซ่อนปุ่มบนหน้าจอ
+//
+// ⚠️ ชื่อฟังก์ชันในไฟล์นี้เป็นภาษาอังกฤษ ต่างจากไฟล์ .js ของโครงงานที่ตั้งชื่อเป็นภาษาไทย
+//    เพราะภาษาของ Security Rules เป็นคนละภาษากับ JavaScript และรับชื่อตัวแปรได้เฉพาะ
+//    ตัวอักษรอังกฤษ ถ้าตั้งเป็นภาษาไทยกฎจะคอมไพล์ไม่ผ่านและ deploy ไม่ขึ้น
+//    ส่วนค่าสถานะภาษาไทย ("รอพิจารณา" ฯลฯ) เป็นข้อความธรรมดา ใช้ได้ตามปกติ
+//
+// ⚠️ ลำดับการใช้งาน: ใส่ข้อมูลตัวอย่างผ่าน seed.html ให้เสร็จ "ก่อน" deploy ไฟล์นี้
+//    เพราะ seed เขียน users/u001 และใบลาที่ requesterId เป็น u001/u003 ซึ่งไม่ใช่ uid
+//    ของคนที่ล็อกอินอยู่ กฎด้านล่างจึงบล็อกอย่างถูกต้อง — ถ้าจะ seed ซ้ำภายหลัง
+//    ให้ใส่ข้อมูลจาก Firebase Console แทน (Console ไม่ผ่านกฎชุดนี้)
+// ─────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── ตัวช่วยที่ใช้ร่วมกันทุกโฟลเดอร์ ──
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // อ่านบทบาทของ "คนที่กำลังเรียก" จากไฟล์ users/{uid} ของเขาเอง (หัวข้อ 2)
+    // เช็ค exists() ก่อนเสมอ เพราะ get() บนไฟล์ที่ไม่มีอยู่จะทำให้กฎพังทั้งข้อ
+    function hasProfile() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function myRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // ผู้อนุมัติ (manager) และฝ่ายบุคคล (hr) — เห็นใบลาทุกใบ เปลี่ยนสถานะได้
+    function isApprover() {
+      return hasProfile() && (myRole() == 'manager' || myRole() == 'hr');
+    }
+
+    // ฝ่ายบุคคล (hr) เท่านั้น — จัดการประเภทการลา
+    function isHr() {
+      return hasProfile() && myRole() == 'hr';
+    }
+
+    // ── 📁 users — ผู้ใช้ ──
+    // อ่านได้ทุกคนที่ล็อกอิน เพราะหน้าจอต้องเอา uid ไปแลกเป็นชื่อคน (หัวข้อ 5.3)
+    // แต่เขียนได้เฉพาะไฟล์ของตัวเอง และ role ห้ามขยับเด็ดขาด
+    match /users/{uid} {
+      allow read: if isSignedIn();
+
+      // สมัครสมาชิกใหม่ต้องเป็น employee เสมอ (US-08) — กันคนสมัครแล้วตั้ง role
+      // เป็น manager/hr ให้ตัวเองตั้งแต่วินาทีแรก ซึ่งเป็นช่องโหว่ตัวจริง
+      allow create: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.role == 'employee';
+
+      // แก้ไฟล์ตัวเองได้ (เช่น เปลี่ยนชื่อ) แต่ role ต้องเท่าเดิมเป๊ะ
+      // การเลื่อนคนเป็น manager/hr ทำได้ทางเดียวคือแก้ใน Firebase Console
+      allow update: if isSignedIn()
+                    && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;
+
+      allow delete: if false;
+    }
+
+    // ── 📁 leaveTypes — ประเภทการลา ──
+    // ทุกคนที่ล็อกอินอ่านได้ (หน้ายื่นใบลาต้องใช้ทำรายการเลื่อนลง)
+    // เพิ่ม/แก้/ลบ ได้เฉพาะฝ่ายบุคคล ตามตารางหัวข้อ 2 (manager และ employee "แก้ประเภทการลา" ไม่ได้)
+    match /leaveTypes/{leaveTypeId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isHr();
+    }
+
+    // ── 📁 leaveRequests — ใบขอลา ──
+    match /leaveRequests/{requestId} {
+
+      function isMine() {
+        return isSignedIn() && resource.data.requesterId == request.auth.uid;
+      }
+
+      // (ก) เจ้าของแก้เนื้อหาใบของตัวเองได้ เฉพาะตอนที่ยังเป็น รอพิจารณา
+      //     ห้ามแตะ status (หัวข้อ 6 "ผู้ขอลาเปลี่ยนสถานะไม่ได้")
+      //     และห้ามแตะ requesterId/requesterName เพื่อกันการโยนใบให้คนอื่น
+      function ownerEditsContent() {
+        return isMine()
+          && resource.data.status == 'รอพิจารณา'
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['status', 'requesterId', 'requesterName']);
+      }
+
+      // (ข) ผู้อนุมัติ/ฝ่ายบุคคลเปลี่ยนสถานะ — แก้ได้ "ช่อง status ช่องเดียว" เท่านั้น
+      //     และต้องเดินตามลูกศรหัวข้อ 6: รอพิจารณา → อนุมัติ หรือ ไม่อนุมัติ · ห้ามย้อนกลับ
+      //     ใบที่พิจารณาไปแล้วจึงเปลี่ยนต่อไม่ได้ เพราะ resource.data.status ไม่ใช่ รอพิจารณา แล้ว
+      function approverChangesStatusOnly() {
+        return isApprover()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && resource.data.status == 'รอพิจารณา'
+          && (request.resource.data.status == 'อนุมัติ'
+              || request.resource.data.status == 'ไม่อนุมัติ');
+      }
+
+      // ผู้ขอลาเห็นเฉพาะใบของตัวเอง · ผู้อนุมัติและฝ่ายบุคคลเห็นทุกใบ (US-08)
+      // ใช้ได้ทั้งการเปิดทีละใบและการ query รายการ เพราะหน้ารายการของ employee
+      // ใส่เงื่อนไข where('requesterId','==',uid) ไว้แล้ว Firestore จึงพิสูจน์ได้ว่าปลอดภัย
+      allow read: if isMine() || isApprover();
+
+      // ยื่นใบใหม่: ต้องยื่นในนามตัวเอง และใบใหม่เริ่มที่ รอพิจารณา เสมอ (หัวข้อ 6)
+      allow create: if isSignedIn()
+                    && request.resource.data.requesterId == request.auth.uid
+                    && request.resource.data.status == 'รอพิจารณา';
+
+      allow update: if ownerEditsContent() || approverChangesStatusOnly();
+
+      // ลบได้เฉพาะเจ้าของ และเฉพาะใบที่ยังเป็น รอพิจารณา (US-07 + หัวข้อ 6)
+      // ผู้อนุมัติ "ลบใบลาของคนอื่น" ไม่ได้ ตามตารางหัวข้อ 2
+      allow delete: if isMine() && resource.data.status == 'รอพิจารณา';
+
+      // ── 📁 approvals — ความเห็นการอนุมัติ (โฟลเดอร์ย่อยของใบลาใบนั้น) ──
+      match /approvals/{approvalId} {
+
+        // สิทธิ์เห็นความเห็น = สิทธิ์เห็นใบแม่ ถ้าเปิดใบไม่ได้ ก็อ่านความเห็นในใบไม่ได้
+        function canSeeParent() {
+          return isSignedIn()
+            && exists(/databases/$(database)/documents/leaveRequests/$(requestId))
+            && (get(/databases/$(database)/documents/leaveRequests/$(requestId))
+                  .data.requesterId == request.auth.uid
+                || isApprover());
+        }
+
+        allow read: if canSeeParent();
+
+        // เจ้าของใบเขียนความเห็นเพิ่มในใบของตัวเองได้ · ผู้อนุมัติและฝ่ายบุคคลเขียนได้ทุกใบ (หัวข้อ 2)
+        // authorId ต้องเป็นตัวเอง จะสวมชื่อคนอื่นเขียนไม่ได้
+        allow create: if canSeeParent()
+                      && request.resource.data.authorId == request.auth.uid;
+
+        // ความเห็นเขียนแล้วแก้ไม่ได้ ลบไม่ได้ (append-only)
+        allow update, delete: if false;
+      }
+    }
+
+    // ── ทุกอย่างที่ไม่ได้ระบุไว้ข้างบน ปิดหมด ──
+    // (Firestore ปิดเป็นค่าเริ่มต้นอยู่แล้ว เขียนไว้ให้อ่านแล้วเห็นชัดว่าไม่มีรูโหว่ค้างไว้)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -10,7 +10,8 @@
     { href: "index.html",             ชื่อ: "หน้าแรก" },
     { href: "leave-requests.html",    ชื่อ: "รายการใบลา" },
     { href: "new-leave-request.html", ชื่อ: "ยื่นใบลาใหม่" },
-    { href: "leave-types.html",       ชื่อ: "ประเภทการลา" }
+    { href: "leave-types.html",       ชื่อ: "ประเภทการลา", เฉพาะhr: true },
+    { href: "dashboard.html",         ชื่อ: "แดชบอร์ด" }
   ];
 
   // ชื่อไฟล์ของหน้าที่กำลังเปิดอยู่ เอาไว้ขีดเส้นใต้เมนูที่ตรงกัน
@@ -19,14 +20,33 @@
   var html = '<div class="navbar"><span class="brand">🔧 LeaveEasy</span>';
   เมนู.forEach(function (m) {
     var active = m.href === หน้าปัจจุบัน ? ' class="active"' : "";
-    html += '<a href="' + m.href + '"' + active + ">" + m.ชื่อ + "</a>";
+    // เมนูเฉพาะ hr ซ่อนไว้ก่อน — js/auth-guard.js จะสั่งเปิดให้ผ่าน ปรับนำทางตามผู้ใช้() เมื่อรู้บทบาทแล้ว
+    var ซ่อน = m.เฉพาะhr ? ' style="display:none" data-hr-only="1"' : "";
+    html += '<a href="' + m.href + '"' + active + ซ่อน + ">" + m.ชื่อ + "</a>";
   });
-  // ช่องว่างสำหรับแสดงชื่อคนที่ล็อกอินอยู่ (เติมค่าในสัปดาห์ที่ 7)
   html += '<span class="nav-user" id="navUser"></span></div>';
 
   var ที่วาง = document.getElementById("nav");
   if (ที่วาง) ที่วาง.innerHTML = html;
 })();
+
+// เรียกจาก js/auth-guard.js ทันทีที่รู้ตัวตน/บทบาทของผู้ใช้ที่ล็อกอินอยู่ (US-08, ACL หัวข้อ 2)
+window.ปรับนำทางตามผู้ใช้ = function (ผู้ใช้) {
+  var กล่องชื่อ = document.getElementById("navUser");
+  if (กล่องชื่อ) {
+    กล่องชื่อ.innerHTML =
+      esc(ผู้ใช้.name) + ' <button type="button" id="ปุ่มออกจากระบบ">ออกจากระบบ</button>';
+    var ปุ่มออก = document.getElementById("ปุ่มออกจากระบบ");
+    if (ปุ่มออก) {
+      ปุ่มออก.addEventListener("click", function () {
+        if (typeof window.ออกจากระบบ === "function") window.ออกจากระบบ();
+      });
+    }
+  }
+  if (ผู้ใช้.role === "hr") {
+    document.querySelectorAll('[data-hr-only="1"]').forEach(function (a) { a.style.display = ""; });
+  }
+};
 
 // แถบเตือนสีเหลือง ใช้ตอนที่ยังไม่ได้ตั้งค่า Firebase
 function showConfigWarning(ข้อความ) {

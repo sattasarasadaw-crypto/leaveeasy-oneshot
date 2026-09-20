@@ -37,6 +37,14 @@ body {
 .navbar a { color: #fff; text-decoration: none; padding: 4px 2px; }
 .navbar a:hover, .navbar a.active { border-bottom: 3px solid #ffd166; }
 .navbar .nav-user { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.navbar .nav-user button {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.6);
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 14px;
+}
+.navbar .nav-user button:hover { background: rgba(255,255,255,.15); }
 
 /* ── กรอบเนื้อหา ── */
 .container { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }

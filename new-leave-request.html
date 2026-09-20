@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="css/style.css">
   <script src="js/util.js" defer></script>
   <script src="js/nav.js" defer></script>
-  <script src="js/data.js" defer></script>
-  <script src="js/new-leave-request.js" defer></script>
+  <script type="module" src="js/auth-guard.js"></script>
+  <script type="module" src="js/new-leave-request.js"></script>
 </head>
 <body>
   <div id="nav"></div>
@@ -26,6 +26,11 @@
 
         <label for="reason">เหตุผลการลา</label>
         <textarea id="reason" placeholder="เล่าเหตุผลสั้น ๆ ให้หัวหน้าเข้าใจ"></textarea>
+
+        <div class="btn-row">
+          <button type="button" id="ปุ่มAI" class="btn-ghost">ให้ AI ช่วยจัดประเภทการลา</button>
+        </div>
+        <div id="ผลAI" class="alert alert-ai hidden"></div>
 
         <label for="leaveTypeId">ประเภทการลา</label>
         <select id="leaveTypeId">
